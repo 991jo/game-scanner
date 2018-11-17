@@ -9,6 +9,7 @@ from SRCDSScanner import SRCDSScanner
 from Quake3Scanner import Quake3Scanner
 from NetworkIterator import NetworkIterator
 from Database import Database
+from WebServer import start_webserver
 
 pp = PrettyPrinter(indent=4)
 
@@ -64,6 +65,8 @@ async def main():
         ]
 
     net_it = NetworkIterator(networks)
+
+    loop.create_task(start_webserver(loop, database, "127.0.0.1", 9001))
 
     loop.create_task(dump_db(database, 3))
     print("created regular dump")
