@@ -63,7 +63,6 @@ class Quake3Scanner(BaseScanner):
         return server_dict
 
     def datagram_received(self, data, addr):
-        print("received %s from %s" %(data[:min(40, len(data))], addr))
         try:
             server_dict = self.parse(data, addr)
             if server_dict is not None:
@@ -86,7 +85,7 @@ class Quake3Scanner(BaseScanner):
         """
         ports = Quake3Scanner.default_ports if ports is None else ports
 
-        print("scanning ip %s" % ip)
+        #print("scanning ip %s" % ip)
 
         for port in ports:
             self.transport.sendto(Quake3Scanner.query, (ip,port))

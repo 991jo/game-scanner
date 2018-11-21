@@ -17,7 +17,6 @@ class Database():
 
     def add(self, data):
         """ add data to the database """
-        # check if the server is in the database
         for i in range(len(self.db)):
             server = self.db[i]
             if server["ip"] == data["ip"] and \

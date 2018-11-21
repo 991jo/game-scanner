@@ -14,6 +14,3 @@ async def start_webserver(loop, db, bind_address, port):
     server = web.Server(handler)
 
     await loop.create_server(server, bind_address, port)
-
-    while True:
-        await asyncio.sleep(100*3600)

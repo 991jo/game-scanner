@@ -4,20 +4,27 @@ from socket import AF_INET
 from time import time
 from math import ceil
 from pprint import PrettyPrinter
+from sys import exit
 
 from SRCDSScanner import SRCDSScanner
 from Quake3Scanner import Quake3Scanner
 from NetworkIterator import NetworkIterator
 from Database import Database
 from WebServer import start_webserver
+from PrometheusExporter import start_prometheus
+try:
+    from config import *
+except ImportError:
+    print("config.py not found. Create a config.py file. An example can "
+            "be found as config-example.py in the gamescanner folder")
+    exit(1)
 
 pp = PrettyPrinter(indent=4)
 
 async def dump_db(database, interval):
     while True:
         db = database.dump()
-        pp.pprint(len(db))
-        pp.pprint(db)
+        pp.pprint("db length %d" % len(db))
         await asyncio.sleep(interval)
 
 
@@ -27,19 +34,18 @@ async def main():
     #TODO improve the docstring
     """
 
-    rate = 10; # Number of packets send per second. This rate does not apply to the refresher
-    timestep = 0.2 # timeinterval in which the scanner tries to adjust the scans to
-
-    database = Database(prune_interval=10, prune_time=30)
+    timestep = 0.2 # resolution for the packet rate limit
+    database = Database(**database_settings)
 
     loop = asyncio.get_running_loop()
 
     # List containing all scanners
     scanners = list()
 
-    transport, protocol = await loop.create_datagram_endpoint(
+    # set up the scanners
+    srcdstransport, srcdsprotocol = await loop.create_datagram_endpoint(
             lambda : SRCDSScanner(database), family = AF_INET)
-    scanners.append(protocol)
+    scanners.append(srcdsprotocol)
 
     q3transport, q3protocol = await loop.create_datagram_endpoint(
             lambda : Quake3Scanner(database), family = AF_INET)
@@ -54,19 +60,12 @@ async def main():
 
     print("scanning a maximum of %d ips per step" % num_ips)
 
-    networks = [
-            "216.52.148.47",
-            #"89.163.189.0/24",
-            "89.40.105.235",
-            "193.19.119.197",
-            "46.174.49.219",
-            "45.76.94.34",
-            "85.10.203.89"
-        ]
-
     net_it = NetworkIterator(networks)
 
-    loop.create_task(start_webserver(loop, database, "127.0.0.1", 9001))
+    # start the webserver
+    loop.create_task(start_webserver(loop, database, webserver_address, webserver_port))
+    #start the prometheus exporter
+    loop.create_task(start_prometheus(loop, database, prometheus_address, prometheus_port))
 
     loop.create_task(dump_db(database, 3))
     print("created regular dump")
