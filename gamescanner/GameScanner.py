@@ -37,7 +37,7 @@ async def main():
     timestep = 0.2 # resolution for the packet rate limit
     database = Database(**database_settings)
 
-    loop = asyncio.get_running_loop()
+    loop = asyncio.get_event_loop()
 
     # List containing all scanners
     scanners = list()
@@ -82,4 +82,7 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    loop = asyncio.get_event_loop()
+    loop.create_task(main())
+    loop.run_forever()
+    #asyncio.run(main())
